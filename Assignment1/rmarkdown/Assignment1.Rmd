@@ -1,0 +1,11 @@
+---
+title: "Assignment1"
+author: "Xuejing Jiang"
+date: "March 17, 2019"
+output: html_document
+---
+
+
+## Interesting question:
+Is the 
+
