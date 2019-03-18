@@ -6,6 +6,67 @@ output: html_document
 ---
 
 
-## Interesting question:
-Is the 
+## 1. Interesting question:
+Are the top ranked source countries are the countries more threatened by the invasive species?
+
+Paini, Sheppard, Cook and all (2016) said that "Exactly one-half (10) of the countries ranked in the top 20 source countries were also ranked in the top 20 for threatened countries." I saw a potential positvie correlation between the invasion cost([link to the literature](https://www-pnas-org.uml.idm.oclc.org/content/113/27/7575)).
+
+In this paper, they outlined an important measure, invasion cost, to quantify the economic cost of the invasive species. Specifically, invasin costs are calcuted for both threatened countries and source countries. For the threatened countries, the toal invasion cost for each country, $TIC_{t}$, was calculated by summing up the cost associated with all invasive species' impact on domestic crops (see equation [5,6]). While the total invasion cost from each source country ,$TIC_{s}$, was calculated by summing up the cost of source country's invasive species impacted on the crops in the threatened countries (see equation [8,9]). 
+
+Here, I am interested in the association between the invasion cost applied on threatened countries and the invasion cost that source countries can impose on other countries. 
+
+
+```{r preference, eval=TRUE, echo=TRUE, results='hide', message=FALSE, warning=FALSE, cache=TRUE}
+# loading packages --------------------------------------------------------
+suppressMessages(library("here"))
+suppressMessages(library("tidyverse"))
+suppressMessages(library("gridExtra"))
+suppressMessages(library("sqldf"))
+suppressMessages(library("Hmisc")) # for using %nin%
+suppressMessages(library("skimr"))
+```
+
+```{r setwd, cache=TRUE}
+# setting working directory -----------------------------------------------
+here("..")
+# setting time stamp ------------------------------------------------------
+
+```
+
+
+## 2.Playing with the data
+```{r import_data, echo=TRUE, cache=TRUE}
+# import data ------------------------------------------------------------
+setwd("..")
+A1_wd <- getwd()
+datadir <- paste(A1_wd, "data", sep = "/")
+table1 <- read_csv(paste(datadir, "table_1.csv", sep = "/"))  #sorted by invasion_threat
+table2 <- read_csv(paste(datadir, "table_2.csv", sep = "/"))  %>%  #sorted by invasion_cost 
+    rename(invasion_cost_threatCountry = invasion_cost)
+table3 <- read_csv(paste(datadir, "table_3.csv", sep = "/"))  #sorted by invasion_gdp_proportion
+table4 <- read_csv(paste(datadir, "table_4.csv", sep = "/"))  %>% #sorted by invasion_cost (source countries)
+    rename(invasion_cost_sourceCountry = invasion_cost)
+invasive_species <- read_csv(paste(datadir, "table_6.csv", sep = "/")) #invasive species and impact percentage
+africa_species <- read_csv(paste(datadir, "africa_species.csv", sep = "/"))
+
+```
+
+
+
+## 5. Disgarded works
+
+### 5.1. Interests in finding out the spread of origin countries of the invasive species
+
+In table_6/invasive_species dataset, list of species and their maximum impact percentages are presented, and there are
+
+```{r join_species, echo=TRUE, message=FALSE, warning=FALSE}
+# join species ------------------------------------------------------------
+species <- invasive_species[invasive_species$species %in% africa_species$species, ]
+
+species <- invasive_species %>%
+    inner_join(africa_species, by="species")
+#only 7 invasive species can be found in african speices dataset - this join is not usable
+```
+
+
 

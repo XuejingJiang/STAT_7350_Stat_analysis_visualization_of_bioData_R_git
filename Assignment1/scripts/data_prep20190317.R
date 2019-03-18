@@ -1,5 +1,5 @@
 # import data ------------------------------------------------------------
-table1 <- read_csv("data/table_1.csv")      #sorted by invasion_threat 
+table1 <- read_csv("data", "table_1.csv")      #sorted by invasion_threat 
 table2 <- read_csv("data/table_2.csv") %>%  #sorted by invasion_cost
     rename(invasion_cost_threatCountry = invasion_cost)
 table3 <- read_csv("data/table_3.csv")      #sorted by invasion_gdp_proportion
@@ -70,11 +70,12 @@ table01 <- select(table00, -starts_with("rank"))
 
 
 # plot --------------------------------------------------------------------
-(p1 <- table01 %>% 
-     ggplot(aes(x=invasion_cost_threatCountry, y=invasion_cost_sourceCountry)) +
-     geom_point()+
-     scale_x_log10()+scale_y_log10()+
-     geom_smooth(span=10) +
-     geom_label()
+(p1 <- table01
+    %>% ggplot(aes(x=invasion_cost_threatCountry, y=invasion_cost_sourceCountry))
+    +   geom_point()
+    +   scale_x_log10()+scale_y_log10()
+    +   geom_smooth(span=10) 
+    # +   geom_label()
 )
+
 
