@@ -1,3 +1,5 @@
+options(warn=-1) # turn off warning globally
+
 # import data ------------------------------------------------------------
 table1 <- read_csv("data/table_1.csv")      #sorted by invasion_threat 
     # The overall invasion threat, OTt, was calculated for all species threatening any agricultural crop of a threatened country,
@@ -125,37 +127,46 @@ ggMarginal(p1, type="histogram")
 (p5 <- table01
     # change units into million dollars:
     %>% ggplot(aes(x=ICt_million, y=ICs_million)) 
-    +   geom_point(colour="azure4")
+    +   geom_point(colour="azure4", size=2.5)
     +   scale_x_log10(limits=c(20 , 1.5*10^5))+scale_y_log10()
     +   xlab("Invasion cost of the alien species on domestic crops \n (for threatened countries, Million dollars)")
     +   ylab("Invasion cost of the other countries' crops \n affected by source countries' invasive species (Million dollars)")
+    +   labs(title="Invasion Cost Association Between Source and Threatened Countries", 
+             caption = "Source: Global threat to agriculture from invasive species
+                        https://www-pnas-org.uml.idm.oclc.org/content/113/27/7575")
     +   geom_smooth(span=10, fill="azure3", colour="darkslategray") 
 )
 
 
 # label important points:
 (p5 <- p5 
-    +   geom_text(data = subset(table01, country=="USA"| country=="Japan"), aes(label = country), vjust = 0, nudge_x=.1, nudge_y = -.05, check_overlap = F, colour="darkslategray")
-    +   geom_text(data = subset(table01, country=="China"), aes(label = country), vjust = 0, nudge_x=.1, nudge_y = -.05, check_overlap = F, colour="darkslategray")
+    # +   geom_text(data = subset(table01, country=="USA"| country=="Japan"), aes(label = country), vjust = 0, nudge_x=.1, nudge_y = -.05, check_overlap = F, colour="darkslategray")
+    # +   geom_text(data = subset(table01, country=="China"), aes(label = country), vjust = 0, nudge_x=.1, nudge_y = -.05, check_overlap = F, colour="darkslategray")
     # +   geom_text(data = subset(table01, ICt_million>70000), aes(label = country), vjust = 0, nudge_y = 0.1, check_overlap = F)
-    # +   geom_text(data = subset(table01, ICs_million>100000), aes(label = country), vjust = 0, nudge_x=-.23, nudge_y = 0, check_overlap = F)
+    +   geom_text(data = subset(table01, ICs_million>100000), aes(label = country), vjust = 0, nudge_x=0, nudge_y = 0.15, check_overlap = F, size=3.5)
 )
 
 
 # add theme
 (p5 <- p5 
     + theme_light()
-    + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+    + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #no gridline
+            axis.title.y = element_text(size=10), # change the size of y axis label
+            plot.caption = element_text(size=8, color = "gray8")) # change caption style
 )
 
 # add marginal histograms
 (p6 <- ggMarginal(p5, type="histogram", fill="darkgray", colour="darkslategray", size=7))
 
 
-ggsave("fig_output/A1_p6.png", p6, width = 15, height = 10)
+ggsave("fig_output/A1_p6.png", p6, width = 8, height = 6)
+
 
 
 
 rm(p2, p3, p4)
 
 # this is not a causation but just a correlation. Potential reasons for this: international trading.
+
+options(warn=0) # turn warning back on globally
+
