@@ -156,7 +156,7 @@ datadir &lt;- paste(A1_wd, &quot;data&quot;, sep = &quot;/&quot;)
 table1 &lt;- read_csv(paste(datadir, &quot;table_1.csv&quot;, sep = &quot;/&quot;))  #sorted by invasion_threat</code></pre>
 <pre><code>## Parsed with column specification:
 ## cols(
-##   rank = col_integer(),
+##   rank = col_double(),
 ##   country = col_character(),
 ##   invasion_threat = col_double()
 ## )</code></pre>
@@ -166,7 +166,7 @@ table1 &lt;- read_csv(paste(datadir, &quot;table_1.csv&quot;, sep = &quot;/&quot
 ## cols(
 ##   country = col_character(),
 ##   invasion_cost = col_double(),
-##   rank = col_integer()
+##   rank = col_double()
 ## )</code></pre>
 <pre class="r"><code>table3 &lt;- read_csv(paste(datadir, &quot;table_3.csv&quot;, sep = &quot;/&quot;))  #sorted by invasion_gdp_proportion</code></pre>
 <pre><code>## Parsed with column specification:
@@ -175,7 +175,7 @@ table1 &lt;- read_csv(paste(datadir, &quot;table_1.csv&quot;, sep = &quot;/&quot
 ##   invasion_cost = col_double(),
 ##   gdp_mean = col_double(),
 ##   gdp_proportion = col_double(),
-##   rank = col_integer()
+##   rank = col_double()
 ## )</code></pre>
 <pre class="r"><code>table4 &lt;- read_csv(paste(datadir, &quot;table_4.csv&quot;, sep = &quot;/&quot;))  %&gt;% #sorted by invasion_cost (source countries)
     rename(invasion_cost_sourceCountry = invasion_cost)</code></pre>
@@ -183,28 +183,37 @@ table1 &lt;- read_csv(paste(datadir, &quot;table_1.csv&quot;, sep = &quot;/&quot
 ## cols(
 ##   country = col_character(),
 ##   invasion_cost = col_double(),
-##   rank = col_integer()
+##   rank = col_double()
 ## )</code></pre>
 <pre class="r"><code>invasive_species &lt;- read_csv(paste(datadir, &quot;table_6.csv&quot;, sep = &quot;/&quot;)) #invasive species and impact percentage</code></pre>
 <pre><code>## Parsed with column specification:
 ## cols(
 ##   species = col_character(),
 ##   max_impact_percent = col_double(),
-##   rank = col_integer()
+##   rank = col_double()
 ## )</code></pre>
-<pre class="r"><code>africa_species &lt;-(paste(datadir, &quot;africa_species.csv&quot;, sep = &quot;/&quot;))</code></pre>
+<pre class="r"><code>africa_species &lt;- read_csv(paste(datadir, &quot;africa_species.csv&quot;, sep = &quot;/&quot;))</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   species = col_character(),
+##   authority = col_character(),
+##   country = col_character(),
+##   kingdom = col_character(),
+##   environment_system = col_character(),
+##   origin = col_character()
+## )</code></pre>
 </div>
 <div id="disgarded-works" class="section level2">
 <h2>5. Disgarded works</h2>
 <div id="interests-in-finding-out-the-spread-of-origin-countries-of-the-invasive-species" class="section level3">
 <h3>5.1. Interests in finding out the spread of origin countries of the invasive species</h3>
 <p>In table_6/invasive_species dataset, list of species and their maximum impact percentages are presented, and there are</p>
-<pre class="r"><code># # join species ------------------------------------------------------------
-# species &lt;- invasive_species[invasive_species$species %in% africa_species$species, ]
-# 
-# species &lt;- invasive_species %&gt;%
-#     inner_join(africa_species, by=&quot;species&quot;)
-# #only 7 invasive species can be found in african speices dataset - this join is not usable</code></pre>
+<pre class="r"><code># join species ------------------------------------------------------------
+species &lt;- invasive_species[invasive_species$species %in% africa_species$species, ]
+
+species &lt;- invasive_species %&gt;%
+    inner_join(africa_species, by=&quot;species&quot;)
+#only 7 invasive species can be found in african speices dataset - this join is not usable</code></pre>
 </div>
 </div>
 

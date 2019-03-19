@@ -65,14 +65,8 @@ table00_count <- table00 %>%
 # there is no dup country
 rm(table00_count)
 
-
-# clean up unwanted ranks
-#   and re-define the units of invasion costs (threatened and source)
-table01 <- select(table00, -starts_with("rank")) %>%  
-    mutate(ICt_million = invasion_cost_threatCountry/(10^6), 
-           ICs_million = invasion_cost_sourceCountry/(10^6))
+table01 <- select(table00, -starts_with("rank"))
 # rm(table1, table2_dup, table3_nodup, table4_nodup)
-
 
 
 
@@ -82,10 +76,8 @@ table01 <- select(table00, -starts_with("rank")) %>%
 (p1 <- table01
     %>% ggplot(aes(x=invasion_cost_threatCountry, y=invasion_cost_sourceCountry))
     +   geom_point()
-    +   geom_text(data = subset(table01, ICs_million>34000 | ICt_million>14000 ), aes(label = country), vjust = 0, nudge_y = 3, check_overlap = T) #show outliers
- 
 )
-ggMarginal(p1, type="histogram")
+
 
 # scale the plot and make the graph more presentable, but note that the two outliers are important to noted
 (p2 <- table01
@@ -104,58 +96,14 @@ ggMarginal(p1, type="histogram")
     # +   geom_label()
 )
 
-
-# modify the plot for better presentation; 
-#   add marginal histograms (https://www.r-graph-gallery.com/277-marginal-histogram-for-ggplot2/)
+# modify the plot for better presentation
 (p4 <- table01
     %>% ggplot(aes(x=invasion_cost_threatCountry, y=invasion_cost_sourceCountry))
     +   geom_point()
     +   scale_x_log10()+scale_y_log10()
     +   geom_smooth(span=10) 
-    +   xlab("Invasion cost of the alien species on domestic crops \n (for threatened countries)")
-    +   ylab("Invasion cost of the other countries' crops \n affected by source countries' invasive species")
     # +   geom_label()
 )
-(p4 <- ggMarginal(p4, type="histogram"))
 
 
 
-
-# modify the units
-(p5 <- table01
-    # change units into million dollars:
-    %>% ggplot(aes(x=ICt_million, y=ICs_million)) 
-    +   geom_point(colour="azure4")
-    +   scale_x_log10(limits=c(20 , 1.5*10^5))+scale_y_log10()
-    +   xlab("Invasion cost of the alien species on domestic crops \n (for threatened countries, Million dollars)")
-    +   ylab("Invasion cost of the other countries' crops \n affected by source countries' invasive species (Million dollars)")
-    +   geom_smooth(span=10, fill="azure3", colour="darkslategray") 
-)
-
-
-# label important points:
-(p5 <- p5 
-    +   geom_text(data = subset(table01, country=="USA"| country=="Japan"), aes(label = country), vjust = 0, nudge_x=.1, nudge_y = -.05, check_overlap = F, colour="darkslategray")
-    +   geom_text(data = subset(table01, country=="China"), aes(label = country), vjust = 0, nudge_x=.1, nudge_y = -.05, check_overlap = F, colour="darkslategray")
-    # +   geom_text(data = subset(table01, ICt_million>70000), aes(label = country), vjust = 0, nudge_y = 0.1, check_overlap = F)
-    # +   geom_text(data = subset(table01, ICs_million>100000), aes(label = country), vjust = 0, nudge_x=-.23, nudge_y = 0, check_overlap = F)
-)
-
-
-# add theme
-(p5 <- p5 
-    + theme_light()
-    + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-)
-
-# add marginal histograms
-(p6 <- ggMarginal(p5, type="histogram", fill="darkgray", colour="darkslategray", size=7))
-
-
-ggsave("fig_output/A1_p6.png", p6, width = 15, height = 10)
-
-
-
-rm(p2, p3, p4)
-
-# this is not a causation but just a correlation. Potential reasons for this: international trading.
