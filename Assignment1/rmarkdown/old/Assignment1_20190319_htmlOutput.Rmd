@@ -3,7 +3,7 @@ title: "Assignment1"
 author: "Xuejing Jiang"
 date: "March 17, 2019"
 output:
-  pdf_document:
+  html_document:
     toc: true
     toc_depth: 3
 ---
@@ -242,7 +242,6 @@ Note that, this plot is saved on my computer by the ggsave function and then ins
 
 $~$ $~$ $~$ 
 
-\newpage
 
 ## 3. Final plot
 ### 3.1 The finalized plot (p6) to address my question
@@ -255,7 +254,7 @@ $~$
 $~$ 
 
 
-\newpage
+
 ### 3.2 The modified preliminary plot for comparison
 
 $~$
@@ -268,7 +267,7 @@ $~$
 
 $~$ 
 
-\newpage
+
 ### 3.3 Conclusion
 
 From the finalized plot (p6), I can see that there is a relatively strong and positive association between the threat of the source country have on the other countries and the invasion threat of this country received from foreign species invasion. Also, after scaling both axes logarithmly, the distributions of invasion cost from the source country and the invasion cost on the threatened country appear to be normal or at least somewhat sysmetric. 
