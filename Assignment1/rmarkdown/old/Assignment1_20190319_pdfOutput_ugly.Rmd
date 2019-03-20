@@ -1,0 +1,377 @@
+---
+title: "Assignment1"
+author: "Xuejing Jiang"
+date: "March 17, 2019"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+---
+
+
+## 1. Interesting question:
+Are the top ranked source countries are the countries more threatened by the invasive species?
+
+Paini, Sheppard, Cook and all (2016) said that "Exactly one-half (10) of the countries ranked in the top 20 source countries were also ranked in the top 20 for threatened countries." I saw a potential positvie correlation between the invasion cost([link to the literature](https://www-pnas-org.uml.idm.oclc.org/content/113/27/7575)).
+
+In this paper, they outlined an important measure, invasion cost, to quantify the economic cost of the invasive species. Specifically, invasin costs are calcuted for both threatened countries and source countries. For the threatened countries, the toal invasion cost for each country, $TIC_{t}$, was calculated by summing up the cost associated with all invasive species' impact on domestic crops (see equation [5,6]). While the total invasion cost from each source country ,$TIC_{s}$, was calculated by summing up the cost of source country's invasive species impacted on the crops in the threatened countries (see equation [8,9]). 
+
+Here, I am interested in the association between the invasion cost applied on threatened countries and the invasion cost that source countries can impose on other countries. 
+
+
+$~$ $~$ $~$
+
+
+## 2. Interact with the data
+
+### 2.1 Load in the data
+
+```{r preference, eval=TRUE, echo=TRUE, results='hide', message=FALSE, warning=FALSE, autodep=TRUE}
+# loading packages --------------------------------------------------------
+suppressMessages(library("here"))
+suppressMessages(library("tidyverse"))
+suppressMessages(library("gridExtra"))
+suppressMessages(library("sqldf"))
+suppressMessages(library("Hmisc")) # for using %nin%
+suppressMessages(library("skimr"))
+suppressMessages(library("ggExtra")) # plot marginal histogram, density or boxplots
+suppressMessages(library("scales")) # plot marginal histogram, density or boxplots
+```
+
+```{r import_data, echo=TRUE, message=FALSE, warning=FALSE, autodep=TRUE}
+# import data ------------------------------------------------------------
+setwd("..")
+A1_wd <- getwd()
+A1_wd
+datadir <- paste(A1_wd, "data", sep = "/")
+datadir
+table1 <- read_csv(paste(datadir, "table_1.csv", sep = "/"))  #sorted by invasion_threat
+table2 <- read_csv(paste(datadir, "table_2.csv", sep = "/"))  %>%  #sorted by invasion_cost
+    rename(invasion_cost_threatCountry = invasion_cost)
+table3 <- read_csv(paste(datadir, "table_3.csv", sep = "/"))  #sorted by invasion_gdp_proportion
+table4 <- read_csv(paste(datadir, "table_4.csv", sep = "/"))  %>% #sorted by invasion_cost (source countries)
+    rename(invasion_cost_sourceCountry = invasion_cost)
+invasive_species <- read_csv(paste(datadir, "table_6.csv", sep = "/")) #invasive species and impact percentage
+africa_species <- read_csv(paste(datadir, "africa_species.csv", sep = "/"))
+
+
+```
+
+$~$
+
+### 2.2 Clean up the datasets
+#### table_1: 
+```{r, echo=TRUE, message=FALSE, warning=FALSE, autodep=TRUE}
+# clean duplicated country in datasets ------------------------------------
+(table1_count <- table1 %>% 
+    count(country) %>% 
+    filter(n>1) %>% as.tibble())
+# no duplicates in table1
+rm(table1_count)
+```
+#### table_2: 
+```{r, echo=TRUE, message=FALSE, warning=FALSE, autodep=TRUE}
+(table2_count <- table2 %>% 
+    count(country) %>% 
+    filter(n>1) %>% as.tibble())
+(table2_dup <- table2[table2$country == table2_count$country,]) # or replace == by %in%
+# 1 duplicated country: Guinea
+(table2_nodup <- distinct(table2, country, .keep_all=T)) # keep 1 copy of Guinea
+(table2_nodup <- table2[!table2$country == table2_count$country,]) # remove both copy of Guinea
+rm(table2, table2_count, table2_dup)
+```
+#### table_3: 
+```{r, echo=TRUE, message=FALSE, warning=FALSE, autodep=TRUE}
+
+(table3_count <- table3 %>% 
+    count(country) %>% 
+    filter(n>1) %>% as.tibble())
+(table3_dup <- table3[table3$country == table3_count$country,]) # or replace == by %in%
+# 1 duplicated country: Guinea
+(table3_nodup <- table3[table3$country != table3_count$country,])
+rm(table3, table3_count, table3_dup)    
+```
+#### table_4: 
+```{r, echo=TRUE, message=FALSE, warning=FALSE, autodep=TRUE}
+(table4_count <- table4 %>% 
+    count(country) %>% 
+    filter(n>1) %>% as.tibble())
+(table4_dup <- table4[table4$country == table4_count$country,]) # or replace == by %in%
+# 1 duplicated country: Guinea
+(table4_nodup <- table4[table4$country != table4_count$country,])
+rm(table4, table4_count, table4_dup) 
+
+```
+
+$~$
+
+### 2.3 Merge the four tables together based on the same country IDs:
+```{r, echo=TRUE, message=FALSE, warning=FALSE, autodep=TRUE}
+# join 4 tables together (full join) --------------------------------------
+table00 <- table1 %>% 
+    full_join(table2_nodup, by="country") %>% 
+    full_join(table3_nodup, by="country") %>% 
+    full_join(table4_nodup, by="country")
+table00_count <- table00 %>% 
+    count(country) %>% 
+    filter(n>1)
+# there is no dup country
+rm(table00_count)
+
+
+# clean up unwanted ranks
+#   and re-define the units of invasion costs (threatened and source)
+table01 <- select(table00, -starts_with("rank")) %>%  
+    mutate(ICt_million = invasion_cost_threatCountry/(10^6), 
+           ICs_million = invasion_cost_sourceCountry/(10^6))
+# rm(table1, table2_dup, table3_nodup, table4_nodup)
+```
+
+$~$
+
+### 2.4 Preliminary plots
+
+#### p1: Base plot
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE, autodep=TRUE}
+
+# base plot
+(p1 <- table01
+    %>% ggplot(aes(x=invasion_cost_threatCountry, y=invasion_cost_sourceCountry))
+    +   geom_point()
+    +   geom_text(data = subset(table01, ICs_million>34000 | ICt_million>14000 ), aes(label = country), vjust = 0, nudge_y = 3, check_overlap = T) #show outliers
+ 
+)
+ggMarginal(p1, type="histogram")
+```
+
+
+#### p2: Scale x and y axes for better visualization of the data
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE, autodep=TRUE}
+# scale x and y axes and make the graph more presentable, but note that the two outliers (China, USA) in p1 are important to note
+(p2 <- table01
+    %>% ggplot(aes(x=invasion_cost_threatCountry, y=invasion_cost_sourceCountry))
+    +   geom_point()
+    +   scale_x_log10()+scale_y_log10()
+)
+```
+
+
+#### p3: Add a smooth curve to identify the association
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE, autodep=TRUE}
+# add a smooth curve to indicate the positive association
+(p3 <- table01
+    %>% ggplot(aes(x=invasion_cost_threatCountry, y=invasion_cost_sourceCountry))
+    +   geom_point()
+    +   scale_x_log10()+scale_y_log10()
+    +   geom_smooth(span=10) 
+    # +   geom_label()
+)
+```
+
+
+#### p4: Add marginal histograms
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE, autodep=TRUE}
+# modify the plot for better presentation; 
+#   add marginal histograms (https://www.r-graph-gallery.com/277-marginal-histogram-for-ggplot2/)
+(p4 <- table01
+    %>% ggplot(aes(x=invasion_cost_threatCountry, y=invasion_cost_sourceCountry))
+    +   geom_point()
+    +   scale_x_log10()+scale_y_log10()
+    +   geom_smooth(span=10) 
+    +   xlab("Invasion cost of the alien species on domestic crops \n (for threatened countries)")
+    +   ylab("Invasion cost of the other countries' crops \n affected by source countries' invasive species")
+    # +   geom_label()
+)
+(p4 <- ggMarginal(p4, type="histogram"))
+```
+
+#### p5: Further modification on the plot
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE, autodep=TRUE}
+
+# p6 - log-scaled plot (final plot)
+(p5 <- table01
+    # change units into million dollars:
+    %>% ggplot(aes(x=ICt_million, y=ICs_million)) 
+    +   geom_point(colour="azure4", size=2.5)
+    +   scale_x_log10(limits=c(20 , 1.5*10^5), labels=comma)+scale_y_log10(labels=comma) # labels=comma: no to show the scientific notation of numbers
+    +   xlab("Invasion cost of the alien species on domestic crops \n (for threatened countries, Million dollars, log-scaled)")
+    +   ylab("Invasion cost of the other countries' crops affected by \nsource countries' invasive species (Million dollars, log-scaled)")
+    +   labs(title="Is a country ranked higher as potential source of invasive species \nalso more vunlernable to the invasion threats?",
+             subtitle = "(x and y axes are log-scaled)",
+             caption = "Source: Global threat to agriculture from invasive species
+                        https://www-pnas-org.uml.idm.oclc.org/content/113/27/7575")
+    +   geom_smooth(span=10, fill="azure3", colour="darkslategray") 
+)
+
+
+# label important points:
+(p5 <- p5 
+    # +   geom_text(data = subset(table01, ICt_million>70000), aes(label = country), vjust = 0, nudge_y = 0.1, check_overlap = F)
+    +   geom_text(data = subset(table01, ICs_million>100000), aes(label = country), vjust = 0, nudge_x=0, nudge_y = 0.15, check_overlap = F, size=3.5)
+)
+
+
+# add theme
+(p5 <- p5 
+    + theme_light()
+    + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #no gridline
+            axis.title.y = element_text(size=10), # change the size of y axis label
+            axis.text.y = element_text(angle = 90), 
+            plot.title = element_text(hjust =.5), # center plot title, 
+            plot.subtitle = element_text(hjust =.5),
+            plot.caption = element_text(size=8, color = "gray8")) # change caption style
+)
+```
+
+
+#### p6: Add the marginal histogram to finalize the plot
+
+```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, autodep=TRUE}
+# add marginal histograms
+(p6 <- ggMarginal(p5, type="histogram", fill="darkgray", colour="darkslategray", size=7))
+```
+ ![](C:\Users\ZhangYang\OneDrive\Academic Life\Topics_Community_Health_Science\STAT_7350_Stat_analysis_visualization_of_bioData_R_git\Assignment1\fig_output\A1_p6.png) 
+
+Note that, this plot is saved on my computer by the ggsave function and then inserted in this document since the ggMarginal function does not plot nicely in R Markdown. As you may see, in p1 and p4, there are some points are plotted outside the axes due to the incompatibility of the ggMarginal() function. 
+
+
+$~$ $~$ $~$ 
+
+\newpage
+
+## 3. Final plot
+### 3.1 The finalized plot (p6) to address my question
+
+$~$
+
+ ![](C:\Users\ZhangYang\OneDrive\Academic Life\Topics_Community_Health_Science\STAT_7350_Stat_analysis_visualization_of_bioData_R_git\Assignment1\fig_output\A1_p6.png) 
+
+
+$~$ 
+
+
+\newpage
+### 3.2 The modified preliminary plot for comparison
+
+$~$
+
+ ![](C:\Users\ZhangYang\OneDrive\Academic Life\Topics_Community_Health_Science\STAT_7350_Stat_analysis_visualization_of_bioData_R_git\Assignment1\fig_output\A1_p1.png) 
+
+
+<!-- ![](C:\Users\ZhangYang\OneDrive\Academic Life\Topics_Community_Health_Science\STAT_7350_Stat_analysis_visualization_of_bioData_R_git\Assignment1\fig_output\comparison_plot.png)  -->
+
+
+$~$ 
+
+\newpage
+### 3.3 Conclusion
+
+From the finalized plot (p6), I can see that there is a relatively strong and positive association between the threat of the source country have on the other countries and the invasion threat of this country received from foreign species invasion. Also, after scaling both axes logarithmly, the distributions of invasion cost from the source country and the invasion cost on the threatened country appear to be normal or at least somewhat sysmetric. 
+
+From the comparison of plots, it is shown that China and USA are two top threatening source countries, and they are also having the highest ranked invasion cost of foreign species invasion. 
+
+
+$~$ 
+
+
+#### Codes to generate the modified preliminary plot for comparison
+
+```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, autodep=TRUE}
+
+# add the un-logged plot for comparison
+
+# modify the units
+(p1 <- table01
+    # change units into million dollars:
+    %>% ggplot(aes(x=ICt_million, y=ICs_million)) 
+    +   geom_point(colour="azure4", size=2.5)
+    +   scale_x_continuous(labels=comma)+scale_y_continuous(labels=comma) # labels=comma: no to show the scientific notation of numbers
+    +   xlab("Invasion cost of the alien species on domestic crops \n (for threatened countries, Million dollars, log-scaled)")
+    +   ylab("Invasion cost of the other countries' crops affected by \nsource countries' invasive species (Million dollars, log-scaled)")
+    +   labs(
+             # title="Is a country ranked higher as potential source of invasive species \nalso more vunlernable to the invasion threats?", 
+             subtitle = "(Original x and y axes)",
+             caption = "Source: Global threat to agriculture from invasive species
+             https://www-pnas-org.uml.idm.oclc.org/content/113/27/7575")
+    +   geom_smooth(span=10, fill="azure3", colour="darkslategray") 
+    )
+
+
+
+# label important points:
+(p1 <- p1 
+    # +   geom_text(data = subset(table01, ICt_million>70000), aes(label = country), vjust = 0, nudge_y = 0.1, check_overlap = F)
+    +   geom_text(data = subset(table01, ICs_million>34000 | ICt_million>14000 ), aes(label = country), vjust = 0, nudge_x=0, nudge_y = 0.15, check_overlap = T, size=3.5)
+)
+
+
+# add theme
+(p1 <- p1 
+    + theme_light()
+    + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #no gridline
+            axis.title.y = element_text(size=10), # change the size of y axis label
+            axis.text.y = element_text(angle = 90), 
+            plot.title = element_text(hjust =.5), # center plot title
+            plot.subtitle = element_text(hjust =.5), # center plot title
+            plot.caption = element_text(size=8, color = "gray8")) # change caption style
+)
+
+```
+
+```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, autodep=TRUE}
+# add marginal histograms
+(p1 <- ggMarginal(p1, type="histogram", fill="darkgray", colour="darkslategray", size=7))
+
+```
+
+
+$~$ $~$ $~$ 
+
+
+
+## 4. Save the final work
+```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, autodep=TRUE}
+ggsave("fig_output/A1_p6.png", p6, width = 8, height = 6)
+```
+
+To access the figure on the side, please go to the fig_output folder. 
+
+
+$~$ $~$ $~$ 
+
+## 5. Potential implication
+Interesting question: Which countries are the hosts of the most invasive species?
+
+In order to answer to this question, extra country information of species needs to be provided in table 6. 
+
+$~$ $~$ $~$
+
+
+## 6. Disgarded work
+
+### Interests in finding out the spread of origin countries of the most invasive species
+
+In table_6/invasive_species dataset, list of species and their maximum impact percentages are presented, and there are lists of countries and species in africa_species dataset. I was interested in finding out which countries are the hosts of the most invasive species (i.e. the species having the highest-ranked impact percentage). However, after joining the two tables together, little common species are present in both tables. In other words, I cannot identify which countries host the species in table 6. So, I cannot get a conclusion of which countries carries the most influentially invasive species. 
+
+```{r join_species, echo=TRUE, message=FALSE, warning=FALSE}
+# join species ------------------------------------------------------------
+species <- invasive_species[invasive_species$species %in% africa_species$species, ]
+species
+
+species <- invasive_species %>%
+    inner_join(africa_species, by="species")
+#only 7 invasive species can be found in african speices dataset - this join is not usable
+species
+```
+
+```{r join_species2}
+summarise(species)
+```
+
+
+
