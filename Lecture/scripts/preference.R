@@ -7,7 +7,7 @@ suppressMessages(library("sqldf"))
 suppressMessages(library("Hmisc")) # for using %nin%
 suppressMessages(library("skimr"))
 suppressMessages(library("ggExtra")) # plot marginal histogram, density or boxplots
-suppressMessages(library("ggExtra")) # plot marginal histogram, density or boxplots
+suppressMessages(library("scales")) # plot marginal histogram, density or boxplots
 
 
 # setting working directory -----------------------------------------------
