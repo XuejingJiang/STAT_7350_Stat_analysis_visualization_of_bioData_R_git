@@ -301,7 +301,7 @@ $~$
 
 From the finalized plot (p6), I can see that there is a relatively strong and positive association between the threat that source countries impose on the other countries and the invasion threat of this country received from foreign species invasion. Also, after scaling both axes logarithmly, the distributions of invasion cost from the source country and the invasion cost on the threatened country appear to be normal or at least somewhat sysmetric. However, by no means, the positive association implies a causal relationship, as the effect are most likely to be moderated by the trading amount of a country(Paini, Sheppard, Cook and all, 2016). 
 
-Though the final plot present the clear association, the preliminary and non-log-scaled plot give us a clear look of outlining points. In the modified preliminary plot, it is shown that China and USA are the two top threatening source countries, whose invastion cost being either a threatened or source country are way higher than the rest of the countries. 
+Though the final plot present the clear association, the preliminary and non-log-scaled plot gives us a clear look of outlining points. In the modified preliminary plot, it is shown that China and USA are the two top threatening source countries, whose invastion cost being either a threatened or source country are way higher than the rest of the countries. 
 
 
 $~$ 
@@ -355,7 +355,7 @@ $~$
 ```
 
 
-
+\vspace{1cm}
 
 
 ## 4. Save the final work
@@ -365,8 +365,7 @@ ggsave("fig_output/A1_p6.png", p6, width = 8, height = 6)
 
 To access the figure on the side, please go to the fig_output folder. 
 
-
-\newpage
+\vspace{1cm}
 
 $~$ $~$ $~$ 
 
@@ -388,6 +387,7 @@ Extra information and measures on a country's agriculture inspection results and
 
 
 
+\newpage
 
 $~$ $~$ $~$
 
