@@ -13,7 +13,7 @@ Structure:
   
 - Assignment
   - Assignment1
-    -(same folder structure)
+    -(same sub-folder structure)
     
 - Z_collaboration
 
